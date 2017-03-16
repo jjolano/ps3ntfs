@@ -1,0 +1,7 @@
+[submodule "external/-b"]
+	path = external/-b
+	url = https://github.com/freddy38510/libntfs.git
+[submodule "external/libntfs"]
+	path = external/libntfs
+	url = https://github.com/freddy38510/libntfs.git
+	branch = 2016.2.22

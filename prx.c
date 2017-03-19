@@ -124,11 +124,87 @@ int prx_exit(void)
 void prx_main(uint64_t ptr)
 {
 	prx_running = true;
+
+	bool is_mounted[8];
+	memset(is_mounted, 0, sizeof(is_mounted));
+
+	const DISC_INTERFACE* ntfs_usb_if[8] = {
+		&__io_ntfs_usb000,
+		&__io_ntfs_usb001,
+		&__io_ntfs_usb002,
+		&__io_ntfs_usb003,
+		&__io_ntfs_usb004,
+		&__io_ntfs_usb005,
+		&__io_ntfs_usb006,
+		&__io_ntfs_usb007
+	};
 	
 	while(prx_running)
 	{
 		sys_ppu_thread_yield();
-		sys_timer_sleep(1);
+		sys_timer_sleep(3);
+
+		// Iterate ports and mount NTFS.
+		int i;
+		for(i = 0; i < 8; i++)
+		{
+			if(PS3_NTFS_IsInserted(i))
+			{
+				if(!is_mounted[i])
+				{
+					sec_t* partitions = NULL;
+					int num_partitions = ntfsFindPartitions(ntfs_usb_if[i], &partitions);
+
+					int j;
+					for(j = 0; j < num_partitions; j++)
+					{
+						char name[32];
+						sprintf(name, "ntfs%dp%d", i, j);
+
+						ntfsMount(name, ntfs_usb_if[i], partitions[j], CACHE_DEFAULT_PAGE_COUNT, CACHE_DEFAULT_PAGE_SIZE, NTFS_FORCE);
+
+						// add to mount struct
+						mounts = (ntfs_md*) realloc(mounts, ++num_mounts * sizeof(ntfs_md));
+
+						ntfs_md* mount = &mounts[num_mounts - 1];
+
+						strcpy(mount->name, name);
+						mount->interface = ntfs_usb_if[i];
+						mount->startSector = partitions[j];
+					}
+
+					is_mounted[i] = true;
+
+					if(partitions != NULL)
+					{
+						free(partitions);
+					}
+				}
+			}
+			else
+			{
+				if(is_mounted[i])
+				{
+					int j;
+					for(j = 0; j < num_mounts; j++)
+					{
+						// unmount all partitions of this device
+						if(mounts[j].interface == ntfs_usb_if[i])
+						{
+							ntfsUnmount(mounts[j].name, true);
+
+							// realloc
+							memmove(&mounts[j], &mounts[j + 1], (num_mounts - j - 1) * sizeof(ntfs_md));
+							mounts = (ntfs_md*) realloc(mounts, --num_mounts * sizeof(ntfs_md));
+
+							--j;
+						}
+					}
+
+					is_mounted[i] = false;
+				}
+			}
+		}
 	}
 
 	sys_ppu_thread_yield();
@@ -150,7 +226,7 @@ void prx_main(uint64_t ptr)
 
 int prx_start(size_t args, void* argv)
 {
-	if(sys_ppu_thread_create(&prx_tid, prx_main, 0, 1000, 0x1000, SYS_PPU_THREAD_CREATE_JOINABLE, (char*) "ps3ntfs") != 0)
+	if(sys_ppu_thread_create(&prx_tid, prx_main, 0, 1000, 0x2000, SYS_PPU_THREAD_CREATE_JOINABLE, (char*) "ps3ntfs") != 0)
 	{
 		finalize_module();
 		_sys_ppu_thread_exit(SYS_PRX_NO_RESIDENT);

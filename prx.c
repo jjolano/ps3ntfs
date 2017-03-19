@@ -127,8 +127,12 @@ void prx_main(uint64_t ptr)
 	
 	while(prx_running)
 	{
+		sys_ppu_thread_yield();
 		sys_timer_sleep(1);
 	}
+
+	sys_ppu_thread_yield();
+	sys_timer_sleep(1);
 
 	// Unmount NTFS.
 	while(num_mounts-- > 0)

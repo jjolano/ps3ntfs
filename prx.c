@@ -162,7 +162,7 @@ void prx_main(uint64_t ptr)
 						for(j = 0; j < num_partitions; j++)
 						{
 							char name[32];
-							sprintf(name, "ntfs%03d-%03d", i, j);
+							sprintf(name, "ntfs%d-%d", i, j);
 
 							if(ntfsMount(name, ntfs_usb_if[i], partitions[j], CACHE_DEFAULT_PAGE_COUNT, CACHE_DEFAULT_PAGE_SIZE, NTFS_FORCE))
 							{

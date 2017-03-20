@@ -139,7 +139,9 @@ void prx_main(uint64_t ptr)
 		&__io_ntfs_usb007
 	};
 
-	sys_timer_sleep(5);
+	sys_timer_sleep(11);
+
+	vshtask_notify("PS3NTFS started.");
 	
 	while(prx_running)
 	{
@@ -172,6 +174,10 @@ void prx_main(uint64_t ptr)
 								strcpy(mount->name, name);
 								mount->interface = ntfs_usb_if[i];
 								mount->startSector = partitions[j];
+
+								char msg[256];
+								sprintf(msg, "Mounted NTFS: %s", name);
+								vshtask_notify(msg);
 							}
 						}
 
@@ -196,6 +202,10 @@ void prx_main(uint64_t ptr)
 							// realloc
 							memmove(&mounts[j], &mounts[j + 1], (num_mounts - j - 1) * sizeof(ntfs_md));
 							mounts = (ntfs_md*) realloc(mounts, --num_mounts * sizeof(ntfs_md));
+
+							char msg[256];
+							sprintf(msg, "Unmounted NTFS: %s", mounts[j].name);
+							vshtask_notify(msg);
 
 							--j;
 						}

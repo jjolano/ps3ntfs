@@ -20,7 +20,7 @@ PPU_CFLAGS += -ffunction-sections -fdata-sections -fno-builtin-printf -std=gnu99
 PPU_PRX_LDFLAGS += -Wl,--strip-unused-data
 PPU_PRX_LDLIBDIR += -L./external/libntfs -L./vsh/lib
 
-PPU_PRX_LDLIBS += -lstdc_export_stub -lallocator_export_stub -lsysPrxForUser_export_stub
+PPU_PRX_LDLIBS += -lstdc_export_stub -lallocator_export_stub -lsysPrxForUser_export_stub -lvshtask_export_stub
 PPU_PRX_LDLIBS += -lntfs_prx
 
 PPU_OPTIMIZE_LV = -Os

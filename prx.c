@@ -162,7 +162,7 @@ void prx_main(uint64_t ptr)
 							char name[32];
 							sprintf(name, "ntfs%d-%d", i, j);
 
-							if(ntfsMount(name, ntfs_usb_if[i], partitions[j], CACHE_DEFAULT_PAGE_COUNT, CACHE_DEFAULT_PAGE_SIZE, NTFS_FORCE))
+							if(ntfsMount(name, ntfs_usb_if[i], partitions[j], 16, CACHE_DEFAULT_PAGE_SIZE, NTFS_FORCE))
 							{
 								// add to mount struct
 								mounts = (ntfs_md*) realloc(mounts, ++num_mounts * sizeof(ntfs_md));
@@ -206,9 +206,10 @@ void prx_main(uint64_t ptr)
 			}
 		}
 
-		sys_ppu_thread_yield();
 		sys_timer_sleep(1);
 	}
+
+	sys_timer_sleep(2);
 
 	// Unmount NTFS.
 	while(num_mounts-- > 0)

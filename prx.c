@@ -149,10 +149,10 @@ void prx_main(uint64_t ptr)
 		{
 			if(PS3_NTFS_IsInserted(i))
 			{
-				char msg[256];
-
 				if(!is_mounted[i])
 				{
+					char msg[256];
+
 					sec_t* partitions = NULL;
 					int num_partitions = ntfsFindPartitions(ntfs_usb_if[i], &partitions);
 
@@ -162,9 +162,9 @@ void prx_main(uint64_t ptr)
 						for(j = 0; j < num_partitions; j++)
 						{
 							char name[32];
-							sprintf(name, "ntfs%dusb%03d", j, i);
+							sprintf(name, "ntfs%d-%03d", j, i);
 
-							if(ntfsMount(name, ntfs_usb_if[i], partitions[j], 16, CACHE_DEFAULT_PAGE_SIZE, NTFS_FORCE))
+							if(ntfsMount(name, ntfs_usb_if[i], partitions[j], CACHE_DEFAULT_PAGE_COUNT, CACHE_DEFAULT_PAGE_SIZE, NTFS_FORCE))
 							{
 								// add to mount struct
 								mounts = (ntfs_md*) realloc(mounts, ++num_mounts * sizeof(ntfs_md));

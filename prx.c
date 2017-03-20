@@ -189,7 +189,7 @@ void prx_main(uint64_t ptr)
 			else
 			{
 				char msg[256];
-				
+
 				if(is_mounted[i])
 				{
 					int j;
@@ -203,9 +203,6 @@ void prx_main(uint64_t ptr)
 							// realloc
 							memmove(&mounts[j], &mounts[j + 1], (num_mounts - j - 1) * sizeof(ntfs_md));
 							mounts = (ntfs_md*) realloc(mounts, --num_mounts * sizeof(ntfs_md));
-
-							sprintf(msg, "Unmounted NTFS: %s", mounts[j].name);
-							vshtask_notify(msg);
 
 							--j;
 						}

@@ -139,9 +139,7 @@ void prx_main(uint64_t ptr)
 		&__io_ntfs_usb007
 	};
 
-	sys_timer_sleep(11);
-
-	vshtask_notify("PS3NTFS started.");
+	sys_timer_sleep(5);
 	
 	while(prx_running)
 	{
@@ -151,6 +149,8 @@ void prx_main(uint64_t ptr)
 		{
 			if(PS3_NTFS_IsInserted(i))
 			{
+				char msg[256];
+
 				if(!is_mounted[i])
 				{
 					sec_t* partitions = NULL;
@@ -174,21 +174,22 @@ void prx_main(uint64_t ptr)
 								strcpy(mount->name, name);
 								mount->interface = ntfs_usb_if[i];
 								mount->startSector = partitions[j];
-
-								char msg[256];
-								sprintf(msg, "Mounted NTFS: %s", name);
-								vshtask_notify(msg);
 							}
 						}
 
 						free(partitions);
 					}
 
+					sprintf(msg, "Mounted dev_usb%03d (NTFS: %d)", i, num_partitions);
+					vshtask_notify(msg);
+
 					is_mounted[i] = true;
 				}
 			}
 			else
 			{
+				char msg[256];
+				
 				if(is_mounted[i])
 				{
 					int j;
@@ -203,13 +204,15 @@ void prx_main(uint64_t ptr)
 							memmove(&mounts[j], &mounts[j + 1], (num_mounts - j - 1) * sizeof(ntfs_md));
 							mounts = (ntfs_md*) realloc(mounts, --num_mounts * sizeof(ntfs_md));
 
-							char msg[256];
 							sprintf(msg, "Unmounted NTFS: %s", mounts[j].name);
 							vshtask_notify(msg);
 
 							--j;
 						}
 					}
+
+					sprintf(msg, "Unmounted dev_usb%03d", i);
+					vshtask_notify(msg);
 
 					is_mounted[i] = false;
 				}

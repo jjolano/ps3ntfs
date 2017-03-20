@@ -125,8 +125,6 @@ void prx_main(uint64_t ptr)
 {
 	prx_running = true;
 
-	sys_timer_sleep(5);
-
 	bool is_mounted[8];
 	memset(is_mounted, false, sizeof(is_mounted));
 
@@ -140,11 +138,11 @@ void prx_main(uint64_t ptr)
 		&__io_ntfs_usb006,
 		&__io_ntfs_usb007
 	};
+
+	sys_timer_sleep(5);
 	
 	while(prx_running)
 	{
-		sys_timer_sleep(3);
-
 		// Iterate ports and mount NTFS.
 		int i;
 		for(i = 0; i < 8; i++)
@@ -207,9 +205,10 @@ void prx_main(uint64_t ptr)
 				}
 			}
 		}
-	}
 
-	sys_timer_sleep(2);
+		sys_ppu_thread_yield();
+		sys_timer_sleep(1);
+	}
 
 	// Unmount NTFS.
 	while(num_mounts-- > 0)

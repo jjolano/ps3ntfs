@@ -125,10 +125,7 @@ void ps3ntfs_automount(uint64_t ptr)
 						// unmount all partitions of this device
 						if(mounts[j].interface == ntfs_usb_if[i])
 						{
-							char name[32];
-							sprintf(name, "%s:/", mounts[j].name);
-
-							ntfsUnmount(name, true);
+							ntfsUnmount(mounts[j].name, true);
 
 							// realloc
 							memmove(&mounts[j], &mounts[j + 1], (num_mounts - j - 1) * sizeof(ntfs_md));
@@ -160,10 +157,7 @@ void ps3ntfs_automount(uint64_t ptr)
 
 	while(num_mounts-- > 0)
 	{
-		char name[32];
-		sprintf(name, "%s:/", mounts[num_mounts].name);
-
-		ntfsUnmount(name, true);
+		ntfsUnmount(mounts[num_mounts].name, true);
 	}
 
 	if(mounts != NULL)

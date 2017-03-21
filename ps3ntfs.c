@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-#include <sys/spinlock.h>
+#include <sys/synchronization.h>
 #include <sys/types.h>
 
 #include "vsh_exports.h"
@@ -10,7 +10,7 @@
 #include "ntfs.h"
 #include "ps3ntfs.h"
 
-int spinlock_id;
+sys_lwmutex_t mutex;
 bool show_msgs = false;
 
 ntfs_md* mounts = NULL;
@@ -30,17 +30,23 @@ int ps3ntfs_prx_num_mounts(void)
 
 void ps3ntfs_prx_lock(void)
 {
-	sys_spinlock_lock(&spinlock_id);
+	sys_lwmutex_lock(&mutex, 0);
 }
 
 void ps3ntfs_prx_unlock(void)
 {
-	sys_spinlock_unlock(&spinlock_id);
+	sys_lwmutex_unlock(&mutex);
 }
 
 void ps3ntfs_automount(uint64_t ptr)
 {
-	sys_spinlock_initialize(&spinlock_id);
+	sys_lwmutex_attribute_t attr = {
+		SYS_SYNC_FIFO,
+		SYS_SYNC_NOT_RECURSIVE,
+		""
+	};
+
+	sys_lwmutex_create(&mutex, &attr);
 
 	bool is_mounted[8];
 	memset(is_mounted, false, sizeof(is_mounted));
@@ -71,7 +77,7 @@ void ps3ntfs_automount(uint64_t ptr)
 
 					if(num_partitions > 0 && partitions)
 					{
-						sys_spinlock_lock(&spinlock_id);
+						ps3ntfs_prx_lock();
 
 						int j;
 						for(j = 0; j < num_partitions; j++)
@@ -92,7 +98,7 @@ void ps3ntfs_automount(uint64_t ptr)
 							}
 						}
 
-						sys_spinlock_unlock(&spinlock_id);
+						ps3ntfs_prx_unlock();
 
 						free(partitions);
 					}
@@ -111,7 +117,7 @@ void ps3ntfs_automount(uint64_t ptr)
 			{
 				if(is_mounted[i])
 				{
-					sys_spinlock_lock(&spinlock_id);
+					ps3ntfs_prx_lock();
 
 					int j;
 					for(j = 0; j < num_mounts; j++)
@@ -119,7 +125,10 @@ void ps3ntfs_automount(uint64_t ptr)
 						// unmount all partitions of this device
 						if(mounts[j].interface == ntfs_usb_if[i])
 						{
-							ntfsUnmount(mounts[j].name, true);
+							char name[32];
+							sprintf(name, "%s:/", mounts[j].name);
+
+							ntfsUnmount(name, true);
 
 							// realloc
 							memmove(&mounts[j], &mounts[j + 1], (num_mounts - j - 1) * sizeof(ntfs_md));
@@ -129,7 +138,7 @@ void ps3ntfs_automount(uint64_t ptr)
 						}
 					}
 
-					sys_spinlock_unlock(&spinlock_id);
+					ps3ntfs_prx_unlock();
 
 					if(show_msgs)
 					{
@@ -147,11 +156,14 @@ void ps3ntfs_automount(uint64_t ptr)
 	}
 
 	// Unmount NTFS.
-	sys_spinlock_lock(&spinlock_id);
+	ps3ntfs_prx_lock();
 
 	while(num_mounts-- > 0)
 	{
-		ntfsUnmount(mounts[num_mounts].name, true);
+		char name[32];
+		sprintf(name, "%s:/", mounts[num_mounts].name);
+
+		ntfsUnmount(name, true);
 	}
 
 	if(mounts != NULL)
@@ -160,7 +172,9 @@ void ps3ntfs_automount(uint64_t ptr)
 		mounts = NULL;
 	}
 
-	sys_spinlock_unlock(&spinlock_id);
+	ps3ntfs_prx_unlock();
+
+	sys_lwmutex_destroy(&mutex);
 	
 	sys_ppu_thread_exit(0);
 }

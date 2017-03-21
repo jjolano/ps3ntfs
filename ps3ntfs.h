@@ -17,6 +17,8 @@ int ps3ntfs_prx_num_mounts(void);
 void ps3ntfs_prx_lock(void);
 void ps3ntfs_prx_unlock(void);
 
+void ps3ntfs_automount(uint64_t ptr);
+
 #ifdef __cplusplus
 }
 #endif

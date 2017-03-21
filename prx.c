@@ -54,11 +54,7 @@ SYS_LIB_EXPORT(ps3ntfs_errno, NTFSD);
 SYS_LIB_EXPORT(PS3_NTFS_IsInserted, NTFSD);
 SYS_LIB_EXPORT(PS3_NTFS_Shutdown, NTFSD);
 
-extern int spinlock_id;
 extern bool show_msgs;
-extern ntfs_md* mounts;
-extern int num_mounts;
-extern void ps3ntfs_automount(uint64_t ptr);
 
 sys_ppu_thread_t prx_tid;
 bool prx_running = false;

@@ -5,6 +5,8 @@
 #include <sys/spinlock.h>
 #include <sys/types.h>
 
+#include "vsh_exports.h"
+
 #include "ntfs.h"
 #include "ps3ntfs.h"
 
@@ -15,9 +17,6 @@ ntfs_md* mounts = NULL;
 int num_mounts = 0;
 
 extern bool prx_running;
-
-extern int32_t vshtask_A02D46E7(int32_t arg, const char *msg);  // vshtask_notification_msg()
-#define vshtask_notify(msg) vshtask_A02D46E7(0, msg)
 
 ntfs_md* ps3ntfs_prx_mounts(void)
 {

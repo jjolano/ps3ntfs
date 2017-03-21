@@ -27,5 +27,4 @@ void finalize_module(void);
 void prx_unload(void);
 int prx_stop(void);
 int prx_exit(void);
-void prx_main(uint64_t ptr);
 int prx_start(size_t args, void* argv);

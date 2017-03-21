@@ -11,6 +11,8 @@ SYS_LIB_DECLARE_WITH_STUB(NTFSD, SYS_LIB_AUTO_EXPORT, libps3ntfs_prx);
 
 SYS_LIB_EXPORT(ps3ntfs_prx_mounts, NTFSD);
 SYS_LIB_EXPORT(ps3ntfs_prx_num_mounts, NTFSD);
+SYS_LIB_EXPORT(ps3ntfs_prx_lock, NTFSD);
+SYS_LIB_EXPORT(ps3ntfs_prx_unlock, NTFSD);
 
 /* ntfs.h */
 SYS_LIB_EXPORT(ntfsFindPartitions, NTFSD);
@@ -52,6 +54,7 @@ SYS_LIB_EXPORT(ps3ntfs_errno, NTFSD);
 SYS_LIB_EXPORT(PS3_NTFS_IsInserted, NTFSD);
 SYS_LIB_EXPORT(PS3_NTFS_Shutdown, NTFSD);
 
+int spinlock_id;
 ntfs_md* mounts = NULL;
 int num_mounts = 0;
 
@@ -66,6 +69,16 @@ ntfs_md* ps3ntfs_prx_mounts(void)
 int ps3ntfs_prx_num_mounts(void)
 {
 	return num_mounts;
+}
+
+void ps3ntfs_prx_lock(void)
+{
+	sys_spinlock_lock(&spinlock_id);
+}
+
+void ps3ntfs_prx_unlock(void)
+{
+	sys_spinlock_unlock(&spinlock_id);
 }
 
 inline void _sys_ppu_thread_exit(uint64_t val)
@@ -126,6 +139,8 @@ void prx_main(uint64_t ptr)
 {
 	prx_running = true;
 
+	sys_spinlock_initialize(&spinlock_id);
+
 	bool is_mounted[8];
 	memset(is_mounted, false, sizeof(is_mounted));
 
@@ -159,6 +174,8 @@ void prx_main(uint64_t ptr)
 
 					if(num_partitions > 0 && partitions)
 					{
+						sys_spinlock_lock(&spinlock_id);
+
 						int j;
 						for(j = 0; j < num_partitions; j++)
 						{
@@ -178,6 +195,8 @@ void prx_main(uint64_t ptr)
 							}
 						}
 
+						sys_spinlock_unlock(&spinlock_id);
+
 						free(partitions);
 					}
 
@@ -193,6 +212,8 @@ void prx_main(uint64_t ptr)
 
 				if(is_mounted[i])
 				{
+					sys_spinlock_lock(&spinlock_id);
+
 					int j;
 					for(j = 0; j < num_mounts; j++)
 					{
@@ -209,6 +230,8 @@ void prx_main(uint64_t ptr)
 						}
 					}
 
+					sys_spinlock_unlock(&spinlock_id);
+
 					sprintf(msg, "Unmounted /dev_usb%03d", i);
 					vshtask_notify(msg);
 
@@ -223,6 +246,8 @@ void prx_main(uint64_t ptr)
 	sys_timer_sleep(2);
 
 	// Unmount NTFS.
+	sys_spinlock_lock(&spinlock_id);
+
 	while(num_mounts-- > 0)
 	{
 		ntfsUnmount(mounts[num_mounts].name, true);
@@ -232,6 +257,8 @@ void prx_main(uint64_t ptr)
 	{
 		free(mounts);
 	}
+
+	sys_spinlock_unlock(&spinlock_id);
 	
 	sys_ppu_thread_exit(0);
 }

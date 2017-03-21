@@ -54,17 +54,18 @@ SYS_LIB_EXPORT(PS3_NTFS_Shutdown, NTFSD);
 
 ntfs_md* mounts = NULL;
 int num_mounts = 0;
+
 sys_ppu_thread_t prx_tid;
 bool prx_running = false;
 
-ntfs_md** ps3ntfs_prx_mounts(void)
+ntfs_md* ps3ntfs_prx_mounts(void)
 {
-	return &mounts;
+	return mounts;
 }
 
-int* ps3ntfs_prx_num_mounts(void)
+int ps3ntfs_prx_num_mounts(void)
 {
-	return &num_mounts;
+	return num_mounts;
 }
 
 inline void _sys_ppu_thread_exit(uint64_t val)
@@ -76,7 +77,7 @@ void finalize_module(void)
 {
 	uint64_t meminfo[5];
 
-	sys_prx_id_t prx = sys_prx_get_module_id_by_address(finalize_module);
+	sys_prx_id_t prx = sys_prx_get_my_module_id();
 
 	meminfo[0] = 0x28;
 	meminfo[1] = 2;
@@ -87,7 +88,7 @@ void finalize_module(void)
 
 void prx_unload(void)
 {
-	sys_prx_id_t prx = sys_prx_get_module_id_by_address(prx_unload);
+	sys_prx_id_t prx = sys_prx_get_my_module_id();
 	system_call_3(483, prx, 0, NULL);
 }
 
@@ -180,7 +181,7 @@ void prx_main(uint64_t ptr)
 						free(partitions);
 					}
 
-					sprintf(msg, "Mounted dev_usb%03d (NTFS: %d)", i, num_partitions);
+					sprintf(msg, "Mounted /dev_usb%03d", i);
 					vshtask_notify(msg);
 
 					is_mounted[i] = true;
@@ -208,7 +209,7 @@ void prx_main(uint64_t ptr)
 						}
 					}
 
-					sprintf(msg, "Unmounted dev_usb%03d", i);
+					sprintf(msg, "Unmounted /dev_usb%03d", i);
 					vshtask_notify(msg);
 
 					is_mounted[i] = false;
